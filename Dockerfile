@@ -21,7 +21,7 @@ RUN echo "**** Install dependencies ****" && \
 WORKDIR /opt/BISQ
 
 RUN echo "**** Using Bisq version: $BISQ_VERSION ****" && \
-    git clone --depth 1 --branch v$BISQ_VERSION https://github.com/bisq-network/bisq . && \
+    git clone --depth 1 --branch v$BISQ_VERSION https://github.com/bisq-network/bisq bisq && \
     cd bisq && \
     ./gradlew build
 
