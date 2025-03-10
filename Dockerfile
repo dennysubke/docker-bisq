@@ -2,7 +2,6 @@ FROM ghcr.io/linuxserver/baseimage-rdesktop-web:bionic
 
 ARG BUILD_DATE
 ARG VERSION
-ARG BISQ_RELEASE
 LABEL build_version="Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}"
 LABEL maintainer="aptalca"
 
@@ -11,44 +10,25 @@ ENV \
   GUIAUTOSTART="true" \
   HOME="/config"
 
-RUN echo "**** install git-lfs ****" && \
+RUN echo "**** Install dependencies ****" && \
     apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends curl jq ca-certificates && \
-    curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git-lfs && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      curl jq ca-certificates git git-lfs openjdk-17-jdk && \
     git lfs install && \
-    DEBIAN_FRONTEND=noninteractive apt-get purge -y --auto-remove ${build_deps} && \
-    rm -r /var/lib/apt/lists/* && \
+    rm -rf /var/lib/apt/lists/*
 
+WORKDIR /opt/BISQ
 
-  echo "**** install BISQ ****" && \
-  
-  mkdir -p \
-    /opt/BISQ && \
-  #if [ -z ${BISQ_RELEASE+x} ]; then \
-  #  BISQ_RELEASE=$(curl -sX GET "https://github.com/bisq-network/bisq/releases/latest" \
-  #  | jq -r .tag_name); \
-  #fi && \
-  #BISQ_VERSION="$(echo ${BISQ_RELEASE} | cut -c2-)" && \
-  
-  cd /opt/BISQ && \
-  git clone --depth 1 --branch v1.6.4 https://github.com/bisq-network/bisq && \
-  #git clone --depth 1 --branch ${BISQ_VERSION} https://github.com/bisq-network/bisq && \
-  cd bisq && \
-  ./scripts/install_java.sh && \
-  git lfs pull && \
-  ./gradlew build && \
+RUN echo "**** Fetch latest Bisq release ****" && \
+    BISQ_RELEASE=$(curl -s "https://api.github.com/repos/bisq-network/bisq/releases/latest" | jq -r .tag_name | cut -c2-) && \
+    git clone --depth 1 --branch v${BISQ_RELEASE} https://github.com/bisq-network/bisq . && \
+    ./gradlew build
 
-
-  dbus-uuidgen > /etc/machine-id && \
-
-
-  echo "**** cleanup ****" && \
-  apt-get clean && \
-  rm -rf \
-    /tmp/* \
-    /var/lib/apt/lists/* \
-    /var/tmp/*
-
+RUN echo "**** Set up machine ID for dbus ****" && \
+    dbus-uuidgen > /etc/machine-id
 
 COPY root/ /
+
+EXPOSE 8080
+
+CMD ["/init"]
