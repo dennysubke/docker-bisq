@@ -9,7 +9,7 @@ ENV \
   CUSTOM_PORT="8080" \
   GUIAUTOSTART="true" \
   HOME="/config" \
-  BISQ_VERSION="1.9.11"  # <-- Hier die gewünschte Version setzen
+  BISQ_VERSION="1.9.11"
 
 RUN echo "**** Install dependencies ****" && \
     apt-get update && \
