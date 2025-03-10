@@ -8,7 +8,8 @@ LABEL maintainer="aptalca"
 ENV \
   CUSTOM_PORT="8080" \
   GUIAUTOSTART="true" \
-  HOME="/config"
+  HOME="/config" \
+  BISQ_VERSION="1.9.11"  # <-- Hier die gewünschte Version setzen
 
 RUN echo "**** Install dependencies ****" && \
     apt-get update && \
@@ -19,9 +20,9 @@ RUN echo "**** Install dependencies ****" && \
 
 WORKDIR /opt/BISQ
 
-RUN echo "**** Fetch latest Bisq release ****" && \
-    BISQ_RELEASE=$(curl -s "https://api.github.com/repos/bisq-network/bisq/releases/latest" | jq -r .tag_name | cut -c2-) && \
-    git clone --depth 1 --branch v${BISQ_RELEASE} https://github.com/bisq-network/bisq . && \
+RUN echo "**** Using Bisq version: $BISQ_VERSION ****" && \
+    git clone --depth 1 --branch v$BISQ_VERSION https://github.com/bisq-network/bisq . && \
+    cd bisq && \
     ./gradlew build
 
 RUN echo "**** Set up machine ID for dbus ****" && \
